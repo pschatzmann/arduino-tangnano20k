@@ -127,6 +127,7 @@ CFG
       ExtraSPII2C*) echo ":spi_buses=two,i2c_buses=two" ;;
       CAN*) echo ":can=enabled" ;;
       SdramCodeTest) echo ":boot_mode=sram_sdram" ;;
+      ExceptionTest) echo ":exceptions=enabled" ;;
       *) echo "" ;;
     esac
   }

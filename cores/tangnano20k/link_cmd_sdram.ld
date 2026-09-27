@@ -94,6 +94,16 @@ SECTIONS
     __init_array_end = .;
   } > SRAM
 
+  /* .eh_frame (C++ unwind tables) only gets an output section with
+   * Tools > C++ Exceptions enabled - see ldscripts/exceptions/eh_frame.ld;
+   * the -L path in build.exceptions_ldflags picks which eh_frame.ld this
+   * includes. */
+  INCLUDE eh_frame.ld
+
+  .gcc_except_table : {
+    *(.gcc_except_table .gcc_except_table.*)
+  } > SRAM
+
   .data : {
     *(.data .data.*)
     *(.sdata .sdata.*)

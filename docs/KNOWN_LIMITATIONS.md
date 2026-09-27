@@ -42,8 +42,8 @@
   so they are slow. The core's own `printf`, `mem*()`/`str*()`, `malloc()`
   and `abort()` take precedence over newlib's; newlib functions that need
   an operating system (files, `time()`, signals, ...) fail to link.
-- **No C++ exceptions** out of the box - see
-  [Tools menus](BUILDING.md#tools-menus).
+- **C++ exceptions are off by default** (their unwind tables cost SRAM) -
+  see [Tools menus](BUILDING.md#tools-menus).
 - **DMA's async/background mode only reaches the embedded SDRAM heap,
   not the internal SRAM** (see [DMA](PERIPHERALS.md#dma)). That would need
   true dual-port block RAM where both ports can read or write, and this

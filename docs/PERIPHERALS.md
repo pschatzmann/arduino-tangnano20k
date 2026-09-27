@@ -24,6 +24,11 @@ character, pointer and floating-point conversions (`%f`/`%e`/`%g` are
 software-emulated, since there's no FPU), but not `%n`/`%a` or wide
 characters.
 
+`Serial.printf()` is available too, as on the ESP32/RP2040 cores (it
+isn't part of the standard Arduino `Print` class). It formats with the
+same `vsnprintf()`, on the stack for up to 63 characters and in a heap
+buffer of the exact size beyond that.
+
 ## Digital I/O and PWM
 
 Pins 0-5 are the 6 onboard LEDs: `pinMode`/`digitalWrite`/`digitalRead`
@@ -528,7 +533,13 @@ SDRAM, the heap starts after the code image at the bottom of the SDRAM
 
 `#include <AIAccelerator.h>` (`libraries/AIAccelerator/`), select
 **Tools > AI Accelerator: Enabled** (disabled by default for its LUT and
-block RAM cost).
+block RAM cost). Without that selection `AIAccelerator.h` stops the build
+with an `#error`, because the engine's registers aren't in the bitstream.
+Code that only uses the engine when it's there can check the
+`TANGNANO20K_AI_ACCEL` define (`0` or `1`, see
+[Preprocessor defines](ARCHITECTURE.md#preprocessor-defines)) and
+include the header only when it's `1`. [TinyTTS](https://github.com/pschatzmann/TinyTTS)
+does that to run its INT8 dot products on the engine.
 
 This is the compute engine from the standalone
 [NanoTangAI](https://github.com/pschatzmann/NanoTangAI) project (same

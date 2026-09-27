@@ -109,10 +109,27 @@ FPGA flow (see [Build times](#build-times-and-the-routed-design-cache)).
 | Barrel Shifter | `barrel_shifter`: `disabled`, `enabled` | Single-cycle shifts, gateware only - see [CPU features](PERIPHERALS.md#cpu-features) |
 | C++ Exceptions | `exceptions`: `disabled`, `enabled` | Compiles with `-fexceptions`, see below |
 
-**C++ Exceptions** is a starting point, not a working `throw`/`catch`:
-this core is `-nostdlib` with no libsupc++/libstdc++, so `__cxa_throw`,
-`_Unwind_Resume` and `__gxx_personality_v0` stay unresolved unless you
-bring your own freestanding C++ runtime support.
+Sketches compile as C++17 (`-std=gnu++17`) and link the toolchain's
+`libstdc++`, newlib `libm` and `libc` for whatever the core doesn't
+implement itself, so `std::string`, `std::vector`, `std::map`, `<cmath>`
+and the like work. The core's own `malloc()`, `printf()`, `mem*()`/`str*()`
+and `abort()` take precedence over newlib's (see `recipe.c.combine.pattern`
+in `platform.txt`).
+
+**C++ Exceptions**: compiles with `-fexceptions` and keeps the unwind
+tables (`.eh_frame`), which `libgcc`'s unwinder needs;
+`cores/tangnano20k/cxx_runtime.cpp` registers them at startup, since
+`crtbegin.o` isn't linked. `throw`/`catch`, unwinding with destructors,
+rethrow, library exceptions and `std::bad_alloc` from a failed `new` work
+on hardware - see `libraries/Core/examples/ExceptionTest`. The tables cost
+SRAM (about 7KB for that example), which is why it's off by default.
+
+With the default (disabled), a failed `new` returns `nullptr`, and library
+code that would throw - e.g. `std::bad_alloc` when a container runs out of
+memory - ends in `abort()`. `abort()` prints
+`abort(): out of memory or uncaught C++ exception - program stopped` on
+`Serial` and stops the CPU in an endless loop. An uncaught exception with
+the option enabled ends the same way.
 
 ## Build times and the routed-design cache
 

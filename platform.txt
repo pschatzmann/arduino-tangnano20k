@@ -143,17 +143,16 @@ compiler.c.elf.cmd={compiler.prefix}g++
 # leaving the actual interrupt handler and boot stub code entirely absent
 # from the linked binary. This was a real, previously-undetected bug this
 # project had - see docs/KNOWN_LIMITATIONS.md.
-compiler.c.elf.flags=-nostdlib -nostartfiles -march={compiler.march} -mabi={compiler.mabi} {build.optimization_flags} -Wl,--gc-sections -Wl,--undefined=irq_vec -Wl,--undefined=_boot -T{build.core.path}/{build.ldscript} -Wl,-Map={build.path}/{build.project_name}.map
+compiler.c.elf.flags=-nostdlib -nostartfiles -march={compiler.march} -mabi={compiler.mabi} {build.optimization_flags} -Wl,--gc-sections -Wl,--undefined=irq_vec -Wl,--undefined=_boot -T{build.core.path}/{build.ldscript} {build.exceptions_ldflags} -Wl,-Map={build.path}/{build.project_name}.map
 
 compiler.cpp.cmd={compiler.prefix}g++
 # Overridden per-selection by the Tools > C++ Exceptions board menu (see
-# boards.txt). Disabled by default: this core is -nostdlib with no
-# libsupc++/libstdc++, so enabling exceptions still leaves __cxa_throw,
-# _Unwind_Resume, __gxx_personality_v0 etc. unresolved unless your
-# toolchain happens to provide a usable freestanding unwinder - it isn't
-# a "just flip it on and it works" toggle, more a starting point if you
-# want to bring your own C++ runtime support.
+# boards.txt), disabled by default.
 build.exceptions_flags=-fno-exceptions
+# Selects which eh_frame.ld the linker scripts INCLUDE (-L search path):
+# cores/tangnano20k/ldscripts/exceptions/ keeps the unwind tables,
+# ldscripts/no_exceptions/ discards them.
+build.exceptions_ldflags="-L{build.core.path}/ldscripts/no_exceptions"
 
 compiler.cpp.flags=-c {build.optimization_flags} -ffunction-sections -fdata-sections -march={compiler.march} -mabi={compiler.mabi} -nostdlib -nostartfiles {build.exceptions_flags} -fno-rtti -fno-threadsafe-statics -std=gnu++17 {compiler.warning_flags} {build.defines}
 
@@ -221,7 +220,7 @@ recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build
 # (compared against upload.maximum_size), and "global variables" is the
 # .data/.bss part of it. .flash_data (Boot Mode: Flash) is not counted,
 # and neither is .sdram_image (Tools > Boot Mode: ... + SDRAM).
-recipe.size.regex=^(?:\.text\S*|\.irq_scratch|\.rodata\S*|\.init_array|\.data|\.bss)\s+([0-9]+).*
+recipe.size.regex=^(?:\.text\S*|\.irq_scratch|\.rodata\S*|\.init_array|\.eh_frame|\.gcc_except_table|\.data|\.bss)\s+([0-9]+).*
 recipe.size.regex.data=^(?:\.data|\.bss)\s+([0-9]+).*
 
 # ---------------------------------------------------------------------------

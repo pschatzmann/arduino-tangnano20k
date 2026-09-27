@@ -17,6 +17,7 @@ otherwise, the other Tools options were at their defaults.
 | `Serial` output | `print()`/`println()` with every argument type (integers, `HEX`/`BIN`/`OCT`, floats, `String`), `printf()` including `%f` |
 | `Serial` input | Bursts of up to 128 bytes received completely; `overflow()` stays clear (but see [the USB bridge limitation](KNOWN_LIMITATIONS.md)) |
 | `millis()`/`micros()`/`delay()` | Checked against each other over several seconds |
+| C++ exceptions (Tools > C++ Exceptions: Enabled) | `libraries/Core/examples/ExceptionTest`: throw/catch by value and base class, `what()`, unwinding through 6 frames with destructors, rethrow, `std::out_of_range` from `vector::at()`, `std::bad_alloc` from a failed 64MB `new`, `catch (...)` - all pass |
 | SDRAM heap | A pattern over every word of the 8MB; word, halfword and byte access; a 64KB `malloc` pattern test; `new[]`/`delete[]`; unaligned `memcpy()` |
 | SPI and the SD card | `SD.begin()`, writing a 2KB file, reading it back: 0 mismatches |
 | I2S audio (onboard MAX98357A) | A clean continuous 440Hz sine at 44.1kHz (written in blocks of 64 frames); 22.05kHz square waves |

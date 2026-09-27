@@ -79,15 +79,18 @@ tangnano20k.menu.sd_card.disabled.build.sd_defines=
 tangnano20k.menu.sd_card.enabled=Enabled (GPLv3)
 tangnano20k.menu.sd_card.enabled.build.sd_defines=-DTANGNANO20K_SD_ENABLED
 
-# Tools > C++ Exceptions. Disabled by default: this core is -nostdlib with
-# no libsupc++/libstdc++, so enabling exceptions doesn't give you a
-# working `throw`/`catch` by itself - __cxa_throw, _Unwind_Resume, and
-# __gxx_personality_v0 are still unresolved unless you bring your own
-# freestanding C++ runtime support. See platform.txt.
+# Tools > C++ Exceptions. Disabled by default, since the unwind tables
+# cost SRAM. Enabled compiles with -fexceptions and points the linker
+# at cores/tangnano20k/ldscripts/exceptions/eh_frame.ld, which keeps
+# .eh_frame; libstdc++/libgcc (linked by
+# recipe.c.combine.pattern) supply __cxa_throw and the unwinder, and
+# cores/tangnano20k/cxx_runtime.cpp registers the tables at startup.
 tangnano20k.menu.exceptions.disabled=Disabled (Default)
 tangnano20k.menu.exceptions.disabled.build.exceptions_flags=-fno-exceptions
+tangnano20k.menu.exceptions.disabled.build.exceptions_ldflags="-L{build.core.path}/ldscripts/no_exceptions"
 tangnano20k.menu.exceptions.enabled=Enabled
 tangnano20k.menu.exceptions.enabled.build.exceptions_flags=-fexceptions
+tangnano20k.menu.exceptions.enabled.build.exceptions_ldflags="-L{build.core.path}/ldscripts/exceptions"
 
 # Tools > Boot Mode. SRAM (default) is today's model unchanged: the
 # sketch is baked directly into internal SRAM at synthesis time, so every
