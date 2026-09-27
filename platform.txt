@@ -43,7 +43,7 @@ compiler.mabi={build.mabi}
 # explicitly opt in, not just by typing #include <SD.h>.
 build.sd_defines=
 
-build.defines=-DF_CPU={build.f_cpu} -DARDUINO=10819 -DARDUINO_{build.board} -DARDUINO_ARCH_TANGNANO20K -DTANGNANO20K_SPI_COUNT={build.spi_count} -DTANGNANO20K_I2C_COUNT={build.i2c_count} -DTANGNANO20K_PWM_AUDIO={build.pwm_audio} {build.sd_defines}
+build.defines=-DF_CPU={build.f_cpu} -DARDUINO=10819 -DARDUINO_{build.board} -DARDUINO_ARCH_TANGNANO20K -DTANGNANO20K_SPI_COUNT={build.spi_count} -DTANGNANO20K_I2C_COUNT={build.i2c_count} -DTANGNANO20K_PWM_AUDIO={build.pwm_audio} -DTANGNANO20K_AI_ACCEL={build.ai_accel} {build.sd_defines}
 
 # Overridden per-selection by the Tools > Optimize board menu (see
 # boards.txt); this is the fallback if a sketch/IDE somehow doesn't set it.
@@ -53,7 +53,8 @@ build.optimization_flags=-Os
 # boards.txt): "0" or "1", passed to tools/build_bitstream.py to decide
 # whether to synthesize the AI accelerator gateware at all - it isn't
 # free like an unused software library, since everything in top.v gets
-# synthesized into the bitstream regardless of what a sketch calls.
+# synthesized into the bitstream regardless of what a sketch calls. Also
+# exported to sketches as TANGNANO20K_AI_ACCEL (see build.defines above).
 build.ai_accel=0
 
 # Overridden by the Tools > Boot Mode board menu (see boards.txt). "0"
@@ -154,7 +155,7 @@ compiler.cpp.cmd={compiler.prefix}g++
 # want to bring your own C++ runtime support.
 build.exceptions_flags=-fno-exceptions
 
-compiler.cpp.flags=-c {build.optimization_flags} -ffunction-sections -fdata-sections -march={compiler.march} -mabi={compiler.mabi} -nostdlib -nostartfiles {build.exceptions_flags} -fno-rtti -fno-threadsafe-statics -std=gnu++14 {compiler.warning_flags} {build.defines}
+compiler.cpp.flags=-c {build.optimization_flags} -ffunction-sections -fdata-sections -march={compiler.march} -mabi={compiler.mabi} -nostdlib -nostartfiles {build.exceptions_flags} -fno-rtti -fno-threadsafe-statics -std=gnu++17 {compiler.warning_flags} {build.defines}
 
 compiler.S.cmd={compiler.prefix}gcc
 compiler.S.flags=-c -march={compiler.march} -mabi={compiler.mabi} -x assembler-with-cpp
@@ -197,7 +198,15 @@ recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archi
 # No --whole-archive: core.a's members should only be pulled in when
 # actually referenced, so a sketch that doesn't touch e.g. Serial doesn't
 # pay for HardwareSerial.cpp's code - important given the 64KB SRAM budget.
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} -o {build.path}/{build.project_name}.elf {object_files} "{archive_file_path}" -Wl,--start-group {compiler.libgcc} -Wl,--end-group
+#
+# The toolchain's newlib libm/libc and libstdc++ are linked too, for what
+# the core doesn't implement itself (<math.h>, the rest of <ctype.h>,
+# std::string, ...). -nostdlib drops them from the default link but not
+# the -march-matching multilib search path, so plain -l finds the right
+# ones. core.a comes first inside the group, so its own malloc(), printf(),
+# mem*()/str*() and abort() always win over newlib's - libc only supplies
+# symbols nothing earlier defines.
+recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} -o {build.path}/{build.project_name}.elf {object_files} -Wl,--start-group "{archive_file_path}" -lstdc++ -lm -lc {compiler.libgcc} -Wl,--end-group
 
 # Repurposed: instead of an objcopy-to-hex step, this drives the full FPGA
 # build (bake the program into SRAM init files, then yosys -> nextpnr ->

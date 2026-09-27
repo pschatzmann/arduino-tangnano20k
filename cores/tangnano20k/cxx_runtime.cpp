@@ -26,6 +26,15 @@ extern "C" void __cxa_pure_virtual(void)
   }
 }
 
+/* Our own abort(): newlib's raises SIGABRT, which drags in _kill(),
+ * _getpid() and _exit() - none of which exist on this bare SoC. Called
+ * e.g. by libraries built without exceptions when an allocation fails. */
+extern "C" void abort(void)
+{
+  for (;;) {
+  }
+}
+
 void *operator new(size_t size)
 {
   return malloc(size);

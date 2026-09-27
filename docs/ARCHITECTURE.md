@@ -67,6 +67,7 @@ for every sketch compiled against this board:
 | `TANGNANO20K_SPI_COUNT`  | `0`, `1` (default), or `2` - mirrors **Tools > SPI Buses**' `build.spi_count`, see [A second SPI + I2C port](PERIPHERALS.md#a-second-spi--i2c-port) |
 | `TANGNANO20K_I2C_COUNT`  | `0`, `1` (default), or `2` - mirrors **Tools > I2C Buses**' `build.i2c_count`, same menu |
 | `TANGNANO20K_PWM_AUDIO`  | `0` (default) or `1` - mirrors **Tools > PWM Audio**' `build.pwm_audio`, see [Audio (PWM)](PERIPHERALS.md#audio-pwm) |
+| `TANGNANO20K_AI_ACCEL`   | `0` (default) or `1` - mirrors **Tools > AI Accelerator**' `build.ai_accel`, see [AI accelerator](PERIPHERALS.md#ai-accelerator) |
 
 Use `#ifdef ARDUINO_TANGNANO20K` to guard code specific to this board, e.g.:
 

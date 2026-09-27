@@ -2,6 +2,16 @@
 
 #include <Arduino.h>
 
+/* The accelerator gateware only exists in the bitstream when Tools > AI
+ * Accelerator is enabled. Fail at compile time rather than letting a
+ * sketch talk to registers that aren't there (TANGNANO20K_AI_ACCEL is set
+ * by platform.txt - see docs/ARCHITECTURE.md "Preprocessor defines").
+ * Libraries that only *optionally* use the engine should check
+ * TANGNANO20K_AI_ACCEL themselves and not include this header when it's 0. */
+#if defined(TANGNANO20K_AI_ACCEL) && !TANGNANO20K_AI_ACCEL
+#error "AIAccelerator needs Tools > AI Accelerator: Enabled - see docs/PERIPHERALS.md \"AI accelerator\""
+#endif
+
 /* On-chip INT8 dot-product accelerator: same compute engine
  * (dot_product_engine.v) as the standalone NanoTangAI project's
  * SPI-attached TangNanoAccelerator, but wired directly onto this core's

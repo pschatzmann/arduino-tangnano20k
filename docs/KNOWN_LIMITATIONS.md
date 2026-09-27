@@ -37,10 +37,11 @@
   speeds them up (about 1.6x), but there's no hardware float math. Prefer
   fixed-point arithmetic in hot loops, or the AI accelerator's INT8 path
   where applicable.
-- **No C library math functions** (`sin()`, `sqrt()`, `pow()`, ...). The
-  core is `-nostdlib` and links only libgcc plus its own `printf`,
-  `mem*()`/`str*()` and `malloc()`, so a sketch calling `<math.h>`
-  functions fails to link.
+- **C library math functions (`sin()`, `sqrt()`, `pow()`, ...) come from
+  the toolchain's newlib `libm`**, in software like all float math above,
+  so they are slow. The core's own `printf`, `mem*()`/`str*()`, `malloc()`
+  and `abort()` take precedence over newlib's; newlib functions that need
+  an operating system (files, `time()`, signals, ...) fail to link.
 - **No C++ exceptions** out of the box - see
   [Tools menus](BUILDING.md#tools-menus).
 - **DMA's async/background mode only reaches the embedded SDRAM heap,

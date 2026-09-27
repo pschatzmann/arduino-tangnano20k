@@ -420,7 +420,7 @@ sketch's binary a GPLv3 derivative. This is the real [arduino-libraries/SD](http
 over the `SPI` library above, in standard SD-over-SPI mode - the same
 electrical wiring the slot actually uses. Call `SD.begin(SS)`.
 
-Two deliberate patches to the otherwise-vendored-unmodified code:
+Deliberate patches to the otherwise-vendored-unmodified code:
 
 1. This hardware's SPI chip select is controlled internally by the SPI
    peripheral (asserted for a whole transaction), not through an arbitrary
@@ -434,6 +434,14 @@ Two deliberate patches to the otherwise-vendored-unmodified code:
    since it otherwise `#error`s on any board it doesn't explicitly recognize.
 2. The `TANGNANO20K_SD_ENABLED` guard at the top of `libraries/SD/src/SD.h`
    described above.
+3. An added `libraries/SD/src/FS.h`, so libraries written for the
+   ESP32/ESP8266/RP2040 cores' `<FS.h>` compile here: `fs::File` and
+   `fs::FS` are SD's own `File` and `SDClass`, so a `File` from
+   `SD.open()` can be passed to them directly. It includes `SD.h`, so it
+   needs the same menu selection.
+4. A `File::read(uint8_t *buf, size_t size)` overload in `SD.h`: the
+   original `read(void *, uint16_t)` truncates lengths over 65535, which
+   ESP32-style `file.read(buf, file.size())` hits for any file over 64KB.
 
 Enabling the menu doesn't change the gateware/bitstream at all -
 `libraries/SD` is pure software on top of the always-present SPI

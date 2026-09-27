@@ -53,6 +53,29 @@ namespace SDLib {
       virtual int available();
       virtual void flush();
       int read(void *buf, uint16_t nbyte);
+      /* arduino-tangnano20k-specific addition (see docs/PERIPHERALS.md
+       * "SD card"): read(void *, uint16_t) above silently truncates
+       * lengths over 65535, which ESP32-style code such as
+       * `file.read(buf, file.size())` hits for any file bigger than 64KB.
+       * Reads in 32KB chunks and returns the number of bytes read. */
+      size_t read(uint8_t *buf, size_t size) {
+        size_t total = 0;
+        while (total < size) {
+          size_t chunk = size - total;
+          if (chunk > 0x8000) {
+            chunk = 0x8000;
+          }
+          int got = read((void *)(buf + total), (uint16_t)chunk);
+          if (got <= 0) {
+            break;
+          }
+          total += (size_t)got;
+          if ((size_t)got < chunk) {
+            break;
+          }
+        }
+        return total;
+      }
       bool seek(uint32_t pos);
       uint32_t position();
       uint32_t size();

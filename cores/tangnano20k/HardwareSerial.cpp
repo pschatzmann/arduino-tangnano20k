@@ -1,6 +1,10 @@
 #include "HardwareSerial.h"
 #include "tangnano20k_soc.h"
 
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 namespace tangnano20k {
 
 void HardwareSerial::begin(unsigned long baudrate)
@@ -91,6 +95,31 @@ size_t HardwareSerial::write(uint8_t c)
 {
   TANGNANO20K_UART_DAT_REG = c;
   return 1;
+}
+
+size_t HardwareSerial::printf(const char *format, ...)
+{
+  // Short messages format on the stack; longer ones get a heap buffer of
+  // the exact size vsnprintf() reports.
+  char stackBuf[64];
+  va_list ap;
+  va_start(ap, format);
+  int len = vsnprintf(stackBuf, sizeof(stackBuf), format, ap);
+  va_end(ap);
+  if (len < 0)
+    return 0;
+  if ((size_t)len < sizeof(stackBuf))
+    return write((const uint8_t *)stackBuf, len);
+
+  char *heapBuf = (char *)malloc(len + 1);
+  if (!heapBuf)
+    return 0;
+  va_start(ap, format);
+  vsnprintf(heapBuf, len + 1, format, ap);
+  va_end(ap);
+  size_t written = write((const uint8_t *)heapBuf, len);
+  free(heapBuf);
+  return written;
 }
 
 } // namespace tangnano20k

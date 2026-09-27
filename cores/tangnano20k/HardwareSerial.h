@@ -23,6 +23,11 @@ public:
   size_t write(uint8_t c) override;
   using Print::write;
 
+  // printf-style output, formatted by the core's own vsnprintf()
+  // (tangnano20k_printf.c). Not in ArduinoCore-API's Print, but many
+  // libraries written for ESP32/RP2040 call Serial.printf().
+  size_t printf(const char *format, ...) __attribute__((format(printf, 2, 3)));
+
   operator bool() override { return true; }
 
   // Returns whether received bytes were lost (the RX FIFO was full) since
