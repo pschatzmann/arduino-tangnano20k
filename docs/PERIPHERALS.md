@@ -824,8 +824,9 @@ uploads of Boot Mode: Flash). The sketch is then linked with
 - **Kept in SRAM**: the core (interrupt dispatch, timing, digital I/O),
   libgcc's integer and single-precision `float` helpers, the helix MP3
   decoder, and the bundled I2S, PWMAudio, SPI, Wire, SoftwareSerial,
-  DMA, TangTimer, Servo, WS2812 and CAN libraries. The linker places code
-  by library, so the timing-sensitive code keeps its speed.
+  DMA, TangTimer, Servo, WS2812, CAN and AIAccelerator libraries. The
+  linker places code by library, so the timing-sensitive code keeps its
+  speed.
 - **Moved to SDRAM**: all other code and constants (the sketch itself,
   other libraries, `double` math, strings), up to 1MB. Variables and
   the stack stay in SRAM.

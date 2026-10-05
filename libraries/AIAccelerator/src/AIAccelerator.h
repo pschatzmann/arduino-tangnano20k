@@ -95,6 +95,9 @@ public:
   int32_t *compute(const int8_t *window, size_t len);
 
 private:
+  // ai_accel_bus.v's MAX_K: the result memory has this many slots per row.
+  static const uint8_t kMaxTaps = 16;
+
   uint16_t cinPadded_ = 0;
   uint8_t k_ = 0;
   uint8_t rows_ = 0;

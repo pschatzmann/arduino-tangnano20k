@@ -175,6 +175,37 @@ def run(cmd, **kwargs):
     subprocess.run(cmd, check=True, **kwargs)
 
 
+# nextpnr's placement starts from a random seed. With a well-filled chip
+# (e.g. AI Accelerator + Hardware Multiply/Divide + 54MHz) the default
+# seed can end in a placement the router can't finish ("Failed to find a
+# route for arc ..."), while other seeds route the same netlist fine with
+# timing to spare - so retry routing failures with a few other seeds.
+# Placement failures (the design doesn't fit at all) aren't retried.
+PNR_SEEDS = [None, 2, 3, 4]
+ROUTING_FAILED = ("Routing design failed", "Failed to find a route", "Failed to route")
+
+
+def place_and_route(json_path, pnr_json):
+    nextpnr = require_tool("nextpnr-himbaechel", "place & route", YOSYS_HINT)
+    for attempt, seed in enumerate(PNR_SEEDS):
+        cmd = [nextpnr, "--json", str(json_path), "--write", str(pnr_json),
+               "--device", DEVICE, "--vopt", f"family={FAMILY}", "--vopt", f"cst={CST_FILE}"]
+        if seed is not None:
+            cmd += ["--seed", str(seed)]
+        print("+ " + " ".join(str(c) for c in cmd))
+        routing_failed = False
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
+            for line in proc.stdout:
+                sys.stdout.write(line)
+                routing_failed = routing_failed or any(m in line for m in ROUTING_FAILED)
+        if proc.returncode == 0:
+            return
+        if not routing_failed or attempt == len(PNR_SEEDS) - 1:
+            raise subprocess.CalledProcessError(proc.returncode, cmd)
+        print(f"Routing failed with seed {seed or 'default'} - retrying place & route with seed "
+              f"{PNR_SEEDS[attempt + 1]}")
+
+
 YOSYS_HINT = ("Install oss-cad-suite (https://github.com/YosysHQ/oss-cad-suite-build) "
               "to ~/oss-cad-suite")
 
@@ -625,14 +656,7 @@ def main():
         print(f"Connected {changed} block RAM output enables (OCE) to their read enables - see fix_bram_oce()")
 
     pnr_json = build_dir / "pnrtop.json"
-    run([
-        require_tool("nextpnr-himbaechel", "place & route", YOSYS_HINT),
-        "--json", str(json_path),
-        "--write", str(pnr_json),
-        "--device", DEVICE,
-        "--vopt", f"family={FAMILY}",
-        "--vopt", f"cst={CST_FILE}",
-    ])
+    place_and_route(json_path, pnr_json)
 
     fs_path = build_dir / "prog.fs"
     if routed_dir is not None:

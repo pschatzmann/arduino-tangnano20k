@@ -183,6 +183,14 @@ Notes:
 
 - The costs add up roughly when options are combined, so most
   combinations fit, but everything at once would not.
+- A combination can fit and still fail to route with nextpnr's default
+  placement seed ("Failed to find a route for arc ..."), e.g. AI
+  Accelerator + Hardware Multiply/Divide + Overclocked (54 MHz): 56% of
+  the LUTs but 89% of the block RAM. `tools/build_bitstream.py` then
+  retries place & route with seeds 2, 3 and 4 (each attempt takes as long
+  as the first); seeds 2 and 3 both routed that combination at about
+  70 MHz. A placement failure (the design really doesn't fit) isn't
+  retried.
 - Other resources: the default design uses 32 of the 46 block RAMs (the
   64KB internal SRAM) and about 3,500 of 15,552 flip-flops. The AI
   accelerator adds 9 block RAMs and 32 of the 96 MULT9X9 DSP blocks.

@@ -34,7 +34,7 @@ otherwise, the other Tools options were at their defaults.
 | Onboard WS2812 LED | `WS2812.write()` shows red, green, blue and white correctly |
 | CAN (Tools > CAN) | Internal loopback mode: frames sent and received back (no transceiver) |
 | Hardware Multiply/Divide, Barrel Shifter, Compressed Instructions, 54MHz clock | A benchmark runs correctly with each; results in [CPU features](PERIPHERALS.md#cpu-features). At 54MHz `Serial` and the timers keep the right speed |
-| AI accelerator | A dot product of all-ones vectors returns the expected 32 per tap |
+| AI accelerator | At 27MHz with the bundled toolchain (oss-cad-suite-gowin 2026.9.25): 8 rows, 2-3 taps, all-ones, per-row, small positive, negative weights, negative activations and single-element cases all match a CPU dot product, and so do 11,600 `compute()` calls with random shapes (1-16 taps, up to 1KB windows), weights and activations - and 12,000 more at 54MHz with Boot Mode: Flash + SDRAM. TinyTTS runs its decoder on it (see its docs/tangnano20k.md). This needed two fixes - `int8_mac_lane.v` back to fabric-registered products (the DSP input-register variant returned 0 for every product) and `AIAccelerator::compute()` reading results at `row * 16 + tap` (rows 1-7 were read from the wrong slots) |
 | Boot Mode: SRAM, SRAM + SDRAM, Flash + SDRAM | Sketches start in each mode; with Flash + SDRAM the sketch starts again by itself after unplugging and replugging the board (core bitstream and program in flash). Flash starts Blink after the upload |
 | Code in SDRAM (Boot Mode: SRAM + SDRAM) | `SdramCodeTest`: the image is copied from flash into SDRAM at reset, a function runs from there with the same result as its SRAM copy (2.4x slower at 27MHz), and the heap starts after the image |
 
@@ -44,7 +44,6 @@ otherwise, the other Tools options were at their defaults.
 - `Wire` talking to a real I2C device, and the second SPI/I2C bus
 - `SoftwareSerial` (needs a jumper wire), CAN on a real bus (needs a
   transceiver), PWM Audio, I2S input
-- The AI accelerator with signed and mixed values (only an all-ones test so far)
 - `FLASH_DATA` constants on their own (the flash data partition itself
   works - see Boot Mode: SRAM + SDRAM above)
 - Tools > Boot Mode: Flash starting the sketch after a power cycle (the

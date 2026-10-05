@@ -93,11 +93,15 @@ int32_t *AIAccelerator::compute(const int8_t *window, size_t len)
     TANGNANO20K_AI_ACT_DATA_REG = bytes[i];
   TANGNANO20K_AI_START_REG = 1;
 
-  uint16_t count = (uint16_t)rows_ * k_;
-  for (uint16_t i = 0; i < count; i++)
+  // The engine stores results at row * kMaxTaps + tap (ai_accel_bus.v's
+  // RESULT_ADDR), whatever k is; results_ is packed as row * k_ + tap.
+  for (uint8_t row = 0; row < rows_; row++)
   {
-    TANGNANO20K_AI_RESULT_ADDR_REG = i;
-    results_[i] = (int32_t)TANGNANO20K_AI_RESULT_DATA_REG;
+    for (uint8_t tap = 0; tap < k_; tap++)
+    {
+      TANGNANO20K_AI_RESULT_ADDR_REG = (uint32_t)row * kMaxTaps + tap;
+      results_[row * k_ + tap] = (int32_t)TANGNANO20K_AI_RESULT_DATA_REG;
+    }
   }
   return results_;
 }

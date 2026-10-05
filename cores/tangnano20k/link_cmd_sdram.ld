@@ -69,6 +69,7 @@ SECTIONS
     */libraries/Servo/*(.text .text.*)
     */libraries/WS2812/*(.text .text.*)
     */libraries/CAN/*(.text .text.*)
+    */libraries/AIAccelerator/*(.text .text.*)
   } > SRAM
 
   .rodata : {
@@ -85,6 +86,7 @@ SECTIONS
     */libraries/Servo/*(.rodata .rodata.* .srodata .srodata.*)
     */libraries/WS2812/*(.rodata .rodata.* .srodata .srodata.*)
     */libraries/CAN/*(.rodata .rodata.* .srodata .srodata.*)
+    */libraries/AIAccelerator/*(.rodata .rodata.* .srodata .srodata.*)
   } > SRAM
 
   .init_array : {
